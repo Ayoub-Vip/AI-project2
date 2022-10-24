@@ -7,17 +7,14 @@ sys.setrecursionlimit(1500)
 
 def Utility(currentstate):
     return currentstate.getScore()
-def Terminal_Test(currentstate):
-    return currentstate.isWin() or currentstate.isLose()
+def Terminal_Test(currentstate,depth):
+    return (currentstate.isWin() or currentstate.isLose() or depth >=4)
 def Actions(currentstate,player):
     return currentstate.getLegalActions(player)
 def Result (currentstate,player,action):
     return currentstate.generateSuccessor(player, action)
-# def key(currentstate):
-#     return currentstate.getPacmanPosition(), currentstate.getFood(), currentstate.getGhostPosition(1)
 
 class PacmanAgent(Agent):
-    PACMAN = 0
     def __init__(self,args):
         self.depth = 5000
 
@@ -40,46 +37,38 @@ class PacmanAgent(Agent):
     def min_max(self,state):
     
         def max_value(currentstate,depth,alpha,beta,visited):
-        #    current = key(currentstate)
 
-            if Terminal_Test(currentstate):
+            if Terminal_Test(currentstate,depth):
                 return  Utility(currentstate)
-            # elif current in visited:
-            #     return visited[current]
+
             best_action = Directions.STOP
             best_score = float("-inf")
-            # visited[current] = best_score
 
-            for action in Actions(currentstate,0):
-                score =min_value(Result(currentstate,0,action),1,depth,alpha,beta,visited)
+            for result, action in currentstate.generatePacmanSuccessors():
+                score =min_value(result,1,depth,alpha,beta,visited)
                 if score>best_score:
                     best_score = score
                     best_action = action
                 alpha =max(alpha,best_score)
                 if best_score >= beta:
                     return best_score
-            # visited[current] = best_score
 
             if depth == 0:
                 return best_action
             return best_score
 
         def min_value(currentstate,  ghost,depth,alpha,beta,visited):
-            # current = key(currentstate)
 
-            if Terminal_Test(currentstate):
+            if Terminal_Test(currentstate,depth):
                 return  Utility(currentstate)
-            # elif current in visited:
-            #     return visited[current]
+  
             next_player = ghost + 1
             if ghost == state.getNumAgents() - 1:
                 next_player = 0
 
             best_score = float("inf")
-            # visited[current] = best_score
 
-            for action in Actions(currentstate,ghost):
-                result =Result(currentstate,ghost,action)
+            for result, action in currentstate.generateGhostSuccessors(ghost):
                 if next_player == 0:
                     if (depth == self.depth - 1):
                         score = currentstate.getScore()
