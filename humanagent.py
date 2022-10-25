@@ -24,6 +24,9 @@ class PacmanAgent(Agent):
         self.lastMove = Directions.STOP
         self.keys = []
 
+    def minimax(self, state):
+        return 0
+
     def get_action(self, state):
         """
         Given a pacman game state, returns a legal move.

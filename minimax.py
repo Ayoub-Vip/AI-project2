@@ -1,11 +1,14 @@
 from pacman_module.game import Agent
 from pacman_module.game import Directions
 import pacman_module.util as util
+import sys
+
+sys.setrecursionlimit(1500)
 
 def Utility(currentstate):
-    return heuristic_function(currentstate)
-def Terminal_Test(currentstate,depth,maxDepth):
-    return (currentstate.isWin() or currentstate.isLose() or depth >=maxDepth)
+    return currentstate.getScore()
+def Terminal_Test(currentstate,depth,maxdepth):
+    return (currentstate.isWin() or currentstate.isLose() or depth >=maxdepth)
 def key(state):
     """Returns a key that uniquely identifies a Pacman game state.
 
@@ -17,45 +20,11 @@ def key(state):
     """
 
     return state.getPacmanPosition(), state.getFood(), state.getGhostPosition(1)
-def heuristic_function(state):
-    """ give a state instance, returns the heuristic function based on 
-    min food distance and max distance between the closest one and farthest
-    Arguments: 
-    state: a game state
-
-    Returns: 
-        result
-    """
-    foodlist = state.getFood().asList()
-    position = state.getPacmanPosition()
-    minLoc=0
-    maxLoc=0
-    closest=[]
-    farest=[]
-    far =0
-    for i in range(len(foodlist)):
-        man =util.manhattanDistance(position, foodlist[i])
-        if i==0:
-                minLoc=man
-                farest = foodlist[i]
-                closest = foodlist[i]
-
-        if man < minLoc:
-                minLoc = man
-                closest = foodlist[i]
-        if man > maxLoc:
-                maxLoc=man
-                farest = foodlist[i]
-        
-        if len(closest)>0:
-            far=util.manhattanDistance(closest, farest)
-
-    return state.getScore()-minLoc+util.manhattanDistance(position, state.getGhostPosition(1))*(state.isWin() is False)/2
-
 
 class PacmanAgent(Agent):
     def __init__(self,args):
         self.max_depth = 4
+
 
 
     def get_action(self, state):
@@ -69,10 +38,10 @@ class PacmanAgent(Agent):
         -------
         - A legal move as defined in `game.Directions`.
         """
-        return self.min_max(state)
+        return self.minimax(state)
 
        
-    def min_max(self,state):
+    def minimax(self,state):
         visited =dict()
         def max_value(currentstate,depth,alpha,beta):
             curKey = key (currentstate)
@@ -96,6 +65,7 @@ class PacmanAgent(Agent):
                 #     visited[curKey]=best_score
                 #     return best_score
             if depth == 0:
+                visited[curKey]=best_action
                 return best_action
             visited[curKey]=best_score
             return best_score
