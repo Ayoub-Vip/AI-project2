@@ -2,61 +2,60 @@ from pacman_module.game import Agent
 from pacman_module.game import Directions
 import pacman_module.util as util
 
-def Utility(currentstate):
-    return heuristic_function(currentstate)
-def Terminal_Test(currentstate,depth,maxDepth):
-    return (currentstate.isWin() or currentstate.isLose() or depth >=maxDepth)
-def key(state):
-    """Returns a key that uniquely identifies a Pacman game state.
-
-    Arguments:
-        state: a game state. See API or class `pacman.GameState`.
-
-    Returns:
-        A hashable key tuple.
-    """
-
-    return state.getPacmanPosition(), state.getFood(), state.getGhostPosition(1)
 def heuristic_function(state):
     """ give a state instance, returns the heuristic function based on 
-    min food distance and max distance between the closest one and farthest
-    Arguments: 
+    the closest food distance and closest ghost distance
     state: a game state
 
     Returns: 
         result
     """
+    # findind closest food dist
     foodlist = state.getFood().asList()
     position = state.getPacmanPosition()
-    minLoc=0
-    maxLoc=0
-    closest=[]
-    farest=[]
-    far =0
+    closestFood=0
+
     for i in range(len(foodlist)):
-        man =util.manhattanDistance(position, foodlist[i])
+        minLoc =util.manhattanDistance(position, foodlist[i])
         if i==0:
-                minLoc=man
-                farest = foodlist[i]
-                closest = foodlist[i]
+            closestFood=minLoc
+        else:
+            closestFood=min(minLoc,closestFood)
 
-        if man < minLoc:
-                minLoc = man
-                closest = foodlist[i]
-        if man > maxLoc:
-                maxLoc=man
-                farest = foodlist[i]
-        
-        if len(closest)>0:
-            far=util.manhattanDistance(closest, farest)
-
-    return state.getScore()-minLoc+util.manhattanDistance(position, state.getGhostPosition(1))*(state.isWin() is False)/2
+    # findind closest ghost dist
+    closestGhost=0
+    for i in range(state.getNumAgents()-1):
+        minLoc =util.manhattanDistance(position, state.getGhostPosition(i+1))
+        if i==0:
+            closestGhost=minLoc
+        else :
+            closestGhost=min(minLoc,closestGhost)
+      
+    return state.getScore() - closestFood + closestGhost/2
 
 
 class PacmanAgent(Agent):
-    def __init__(self,args):
-        self.max_depth = 4
+    def __Utility(self,state):
+        return heuristic_function(state)
+    def __Terminal_Test(self,state,depth):
+        return (state.isWin() or state.isLose() or depth >=self.max_depth)
+    def __key(self,state):
+        """Returns a key that uniquely identifies a Pacman game state.
 
+        Arguments:
+            state: a game state. See API or class `pacman.GameState`.
+
+        Returns:
+            A hashable key tuple.
+        """
+        tup = tuple([state.getPacmanPosition(), state.getFood(), tuple(state.getCapsules())])
+        for i in range(state.getNumAgents()-1):
+            tup = tup+ (state.getGhostPosition(i+1),)
+        return tup
+
+    def __init__(self,args):
+        self.max_depth = 3
+        self.alltime_closed = dict()
 
     def get_action(self, state):
         """
@@ -69,44 +68,39 @@ class PacmanAgent(Agent):
         -------
         - A legal move as defined in `game.Directions`.
         """
-        return self.minimax(state)
+        curKey = self.__key(state)
+        self.alltime_closed[curKey]=self.minimax(state)
+        return self.alltime_closed[curKey]
 
        
     def minimax(self,state):
-        visited =dict()
-        def max_value(currentstate,depth,alpha,beta):
-            curKey = key (currentstate)
+        def max_value(currentstate,depth):
+            curKey = self.__key(currentstate)
 
-            if Terminal_Test(currentstate,depth,self.max_depth):
-                return  Utility(currentstate)
-            elif curKey in visited:
-                return visited[curKey]
+            if self.__Terminal_Test(currentstate,depth):
+                return  self.__Utility(currentstate)
+            elif curKey in self.alltime_closed:
+                return float("-inf")
 
             best_action = Directions.STOP
             best_score = float("-inf")
 
             for result, action in currentstate.generatePacmanSuccessors():
-                score =min_value(result,1,depth,alpha,beta)
+                score =min_value(result,1,depth)
                 if score>best_score:
                     best_score = score
                     best_action = action
-                #prunning
-                # alpha =max(alpha,best_score)
-                # if best_score >= beta:
-                #     visited[curKey]=best_score
-                #     return best_score
             if depth == 0:
                 return best_action
-            visited[curKey]=best_score
             return best_score
 
-        def min_value(currentstate,  ghostIndex,depth,alpha,beta):
+        def min_value(currentstate,  ghostIndex,depth):
+            curKey = self.__key (currentstate)
 
-            if Terminal_Test(currentstate,depth,self.max_depth):
-                return  Utility(currentstate)
-            curKey = key (currentstate)
-            if curKey in visited:
-                return visited[curKey]
+            if self.__Terminal_Test(currentstate,depth):
+                return  self.__Utility(currentstate)
+            elif curKey in self.alltime_closed:
+                return float("inf")
             next_player = ghostIndex + 1
 
             if ghostIndex == currentstate.getNumAgents() - 1:
@@ -116,20 +110,10 @@ class PacmanAgent(Agent):
 
             for result, action in currentstate.generateGhostSuccessors(ghostIndex):
                 if next_player == 0:
-                    score= max_value(result,depth+1,alpha,beta)
+                    score= max_value(result,depth+1)
                 else:
-                    score= min_value(result,next_player,depth,alpha,beta)
+                    score= min_value(result,next_player,depth)
                 best_score =min(best_score,float(score))
-                # prunning
-                # beta = min(beta, best_score)
-                # if best_score <= alpha:
-                #     visited[curKey]=best_score
-                #     return best_score
-            visited[curKey]=best_score
             return best_score
-        maxv= max_value(state,0,float("-inf"),float("inf"))
+        maxv= max_value(state,0)
         return maxv
-  
-
-
-    

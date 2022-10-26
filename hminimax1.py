@@ -1,11 +1,51 @@
 from pacman_module.game import Agent
 from pacman_module.game import Directions
+import pacman_module.util as util
+
+def heuristic_function(state):
+    """ give a state instance, returns the heuristic function based on 
+    the closest food distance and closest ghost distance
+    state: a game state
+
+    Returns: 
+        result
+    """
+    # findind closest food dist
+    foodlist = state.getFood().asList()
+    position = state.getPacmanPosition()
+    closestFood=0
+
+    for i in range(len(foodlist)):
+        minLoc =util.manhattanDistance(position, foodlist[i])
+        if i==0:
+            closestFood=minLoc
+        else:
+            closestFood=min(minLoc,closestFood)
+
+    # findind closest ghost dist
+    closestGhost=0
+    for i in range(state.getNumAgents()-1):
+        minLoc =util.manhattanDistance(position, state.getGhostPosition(i+1))
+        if i==0:
+            closestGhost=minLoc
+        else :
+            closestGhost=min(minLoc,closestGhost)
+      
+    return state.getScore() - closestFood + closestGhost/2
+
 
 class PacmanAgent(Agent):
     def __Utility(self,state):
-        return state.getScore()
+        return heuristic_function(state)
     def __Terminal_Test(self,state,depth):
         return (state.isWin() or state.isLose() or depth >=self.max_depth)
+    def __cut_off(self,state,depth,closed):
+        curKey=self.__key(state)
+        if self.__Terminal_Test(state,depth):
+            return  self.__Utility(state)
+        elif curKey in closed:
+            return closed[curKey]
+        return False
     def __key(self,state):
         """Returns a key that uniquely identifies a Pacman game state.
 
@@ -41,11 +81,12 @@ class PacmanAgent(Agent):
 
        
     def minimax(self,state):
+        closed =dict()
         def max_value(currentstate,depth):
             curKey = self.__key(currentstate)
-
-            if self.__Terminal_Test(currentstate,depth):
-                return  self.__Utility(currentstate)
+            score = self.__cut_off(currentstate,depth,closed)
+            if score:
+                return score
             elif curKey in self.alltime_closed:
                 return float("-inf")
 
@@ -59,14 +100,15 @@ class PacmanAgent(Agent):
                     best_action = action
             if depth == 0:
                 return best_action
+            closed[curKey]=best_score
 
             return best_score
 
         def min_value(currentstate,  ghostIndex,depth):
             curKey = self.__key (currentstate)
-
-            if self.__Terminal_Test(currentstate,depth):
-                return  self.__Utility(currentstate)
+            score = self.__cut_off(currentstate,depth,closed)
+            if score:
+                return score
             elif curKey in self.alltime_closed:
                 return float("inf")
             next_player = ghostIndex + 1
@@ -83,6 +125,7 @@ class PacmanAgent(Agent):
                     score= min_value(result,next_player,depth)
                 best_score =min(best_score,float(score))
 
+            closed[curKey]=best_score
             return best_score
         maxv= max_value(state,0)
         return maxv
