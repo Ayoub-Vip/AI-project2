@@ -7,8 +7,10 @@ sys.setrecursionlimit(1500)
 
 def Utility(currentstate):
     return currentstate.getScore()
+
 def Terminal_Test(currentstate,depth,maxdepth):
-    return (currentstate.isWin() or currentstate.isLose() or depth >=maxdepth)
+    return (currentstate.isWin() or currentstate.isLose() or depth >= maxdepth)
+
 def key(state):
     """Returns a key that uniquely identifies a Pacman game state.
 

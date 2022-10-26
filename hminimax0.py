@@ -5,7 +5,9 @@ import pacman_module.util as util
 def Utility(currentstate):
     return heuristic_function(currentstate)
 def Terminal_Test(currentstate,depth,maxDepth):
-    return (currentstate.isWin() or currentstate.isLose() or depth >=maxDepth)
+
+    return (currentstate.isWin() or currentstate.isLose() or depth >= maxDepth)
+
 def key(state):
     """Returns a key that uniquely identifies a Pacman game state.
 
@@ -17,6 +19,7 @@ def key(state):
     """
 
     return state.getPacmanPosition(), state.getFood(), state.getGhostPosition(1)
+
 def heuristic_function(state):
     """ give a state instance, returns the heuristic function based on 
     min food distance and max distance between the closest one and farthest
