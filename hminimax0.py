@@ -32,6 +32,7 @@ def heuristic_function(state):
     foodlist = state.getFood().asList()
     position = state.getPacmanPosition()
     minLoc=0
+    minLoc2=0
     maxLoc=0
     closest=[]
     farest=[]
@@ -46,6 +47,12 @@ def heuristic_function(state):
         if man < minLoc:
                 minLoc = man
                 closest = foodlist[i]
+
+        # foodlist.remove(minLoc)
+        if man < minLoc:
+                minLoc = man
+                closest = foodlist[i]
+        
         if man > maxLoc:
                 maxLoc=man
                 farest = foodlist[i]
@@ -53,7 +60,7 @@ def heuristic_function(state):
         if len(closest)>0:
             far=util.manhattanDistance(closest, farest)
 
-    return state.getScore()-minLoc+util.manhattanDistance(position, state.getGhostPosition(1))*(state.isWin() is False)/2
+    return state.getScore()-state.getNumFood()-minLoc-minLoc2+util.manhattanDistance(position, state.getGhostPosition(1))*(state.isWin() is False)/2
 
 
 class PacmanAgent(Agent):

@@ -25,9 +25,7 @@ def key(state):
 
 class PacmanAgent(Agent):
     def __init__(self,args):
-        self.max_depth = 4
-
-
+        self.max_depth = 10
 
     def get_action(self, state):
         """
@@ -43,22 +41,23 @@ class PacmanAgent(Agent):
         return self.minimax(state)
 
        
-    def minimax(self,state):
-        visited =dict()
-        def max_value(currentstate,depth,alpha,beta):
-            curKey = key (currentstate)
+    def minimax(self, state):
+        visited = dict()
 
-            if Terminal_Test(currentstate,depth,self.max_depth):
+        def max_value(currentstate, depth, alpha, beta):
+            curKey = key(currentstate)
+
+            if Terminal_Test(currentstate, depth, self.max_depth):
                 return  Utility(currentstate)
-            elif curKey in visited:
+            elif curKey in visited:   # Prevent cycles
                 return visited[curKey]
 
             best_action = Directions.STOP
             best_score = float("-inf")
 
             for result, action in currentstate.generatePacmanSuccessors():
-                score =min_value(result,1,depth,alpha,beta)
-                if score>best_score:
+                score = min_value(result, 1, depth, alpha, beta)
+                if score > best_score:
                     best_score = score
                     best_action = action
                 #prunning
@@ -72,9 +71,9 @@ class PacmanAgent(Agent):
             visited[curKey]=best_score
             return best_score
 
-        def min_value(currentstate,  ghostIndex,depth,alpha,beta):
+        def min_value(currentstate, ghostIndex, depth, alpha, beta):
 
-            if Terminal_Test(currentstate,depth,self.max_depth):
+            if Terminal_Test(currentstate, depth, self.max_depth):
                 return  Utility(currentstate)
             curKey = key (currentstate)
             if curKey in visited:
@@ -99,8 +98,9 @@ class PacmanAgent(Agent):
                 #     return best_score
             visited[curKey]=best_score
             return best_score
-        maxv= max_value(state,0,float("-inf"),float("inf"))
-        return maxv
+
+        
+        return  max_value(state,0,float("-inf"),float("inf"))
   
 
 
