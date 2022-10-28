@@ -5,71 +5,87 @@ import pacman_module.util as util
 
 def heuristic_function(state):
     """give a state instance, returns the heuristic function based on
-    the closest food distance , closest ghost distance and distance
-    between closest food and all other food in the map.
+    the closest food distance , closest ghost distance, distance
+    between closest food and all other food in the map and distance
+    to walls"
     state: a game state
 
     Returns:
         result
     """
-    # findind closest food dist
-    foodlist = state.getFood().asList()
-    position = state.getPacmanPosition()
-    closestFood = 0
-    closestFoodPos = []
+    def foodScore():
+        score = 0
+        foodlist = state.getFood().asList()
+        position = state.getPacmanPosition()
+        closestFood = 0
+        closestFoodPos = []
+        # findind closest food dist
+        for i in range(len(foodlist)):
+            near = foodlist[i]
+            minLoc = util.manhattanDistance(position, near)
+            if i == 0:
+                closestFood = minLoc
+                closestFoodPos = near
+            if minLoc < closestFood:
+                closestFood = minLoc
+                closestFoodPos = near
+        # reward pacman if food eaten if not normalize shorter distance
+        if closestFood == 0:
+            score += 5
+        else :
+            score += 1/closestFood
+        # Take all food distance to closest food into consideration
+        for food in foodlist:
+            dist = util.manhattanDistance(closestFoodPos, food)
+            if dist != 0:
+                score += 1/dist
+            else:
+                score += 1000
+        return score
+
+    def wallsScore():
+        score =0
+        position = state.getPacmanPosition()
+        # Some time pacman can get stuck in walls.
+        walls = state.getWalls()
+
+        for i in range(walls.width):
+            for j in range(walls.height):
+                man = util.manhattanDistance((i, j), position)
+                if i != 1 or j != 1:
+                    if walls[i][j]:
+                        score += 0.1/man
+        return score
+
+    def ghostScore():
+        score=0
+        # findind closest ghost dist
+        position = state.getPacmanPosition()
+        closestGhost = 1
+        for i in range(state.getNumAgents()-1):
+            ghostPos = state.getGhostPosition(i+1)
+            minLoc = util.manhattanDistance(position, ghostPos)
+            if i == 0:
+                closestGhost = minLoc
+            else:
+                closestGhost = min(minLoc, closestGhost)
+        if closestGhost ==0:
+            score -= 2000
+        else:
+            score -= 0.5/closestGhost
+        return score
+
+    score = 0
     if state.isLose():
         return float('-inf')
     elif state.isWin():
         return state.getScore() + 1000
 
-    # findind closest food dist
-    for i in range(len(foodlist)):
-        near = foodlist[i]
-        minLoc = util.manhattanDistance(position, near)
-        if i == 0:
-            closestFood = minLoc
-            closestFoodPos = near
-        if minLoc < closestFood:
-            closestFood = minLoc
-            closestFoodPos = near
-
-    score = 0
-    # reward pacman if food eaten if not normalize shorter distance
-    if closestFood == 0:
-        score += 500
-    else:
-        score += 1/closestFood
-    # Some time pacman can get stuck in walls.
-    walls =state.getWalls()
-    for i in range(walls.width):
-        for j in range(walls.height):
-            man = util.manhattanDistance((i, j), position)
-            if i != 1 or j != 1:
-                if walls[i][j]:
-                    score += 0.1/man
-    # Take all food distance to closest food into consideration
-    for food in foodlist:
-        dist = util.manhattanDistance(closestFoodPos, food)
-        if dist != 0:
-            score += 1/dist
-        else:
-            score += 1000
-
-    # findind closest ghost dist
-    closestGhost = 1
-    for i in range(state.getNumAgents()-1):
-        minLoc = util.manhattanDistance(position, state.getGhostPosition(i+1))
-        if i == 0:
-            closestGhost = minLoc
-        else:
-            closestGhost = min(minLoc, closestGhost)
-    if closestGhost ==0:
-        score -= 2000
-    elif closestGhost<2:
-        score -= 0.5/closestGhost
-
+    food_score = foodScore()
+    walls_score = wallsScore()
+    ghost_score = ghostScore()
+    score += food_score + walls_score + ghost_score
     return state.getScore() + score
-
 
 class PacmanAgent(Agent):
     def __Utility(self, state):
@@ -127,12 +143,12 @@ class PacmanAgent(Agent):
         def max_value(currentstate, depth):
             curKey = self.__key(currentstate)
             score = self.__cut_off(currentstate, depth, closed)
-            if curKey in self.alltime_closed:
+            if score:
+                return score
+            elif curKey in self.alltime_closed:
                 if depth != 0:
                     return float("-inf")
-            elif score:
-                return score
-            
+
             best_action = Directions.STOP
             best_score = float("-inf")
 
