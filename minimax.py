@@ -18,8 +18,8 @@ class PacmanAgent(Agent):
         Returns:
             A hashable key tuple.
         """
-        tup = tuple([state.getPacmanPosition(), 
-            state.getFood(), tuple(state.getCapsules())])
+        tup = tuple([state.getPacmanPosition(),
+                    state.getFood(), tuple(state.getCapsules())])
 
         for i in range(state.getNumAgents() - 1):
             tup = tup + (state.getGhostPosition(i + 1), )
@@ -48,7 +48,7 @@ class PacmanAgent(Agent):
             curKey = self.__key(currentstate)
 
             if self.__Terminal_Test(currentstate):
-                return  self.__Utility(currentstate)
+                return self.__Utility(currentstate)
             elif curKey in self.alltime_closed:
                 return float("-inf")
 
@@ -69,7 +69,7 @@ class PacmanAgent(Agent):
             curKey = self.__key(currentstate)
 
             if self.__Terminal_Test(currentstate):
-                return  self.__Utility(currentstate)
+                return self.__Utility(currentstate)
             elif curKey in self.alltime_closed:
                 return float("inf")
             next_player = ghostIndex + 1
@@ -84,7 +84,7 @@ class PacmanAgent(Agent):
                     score = max_value(result, depth + 1)
                 else:
                     score = min_value(result, next_player, depth)
-                best_score =min(best_score, float(score))
+                best_score = min(best_score, float(score))
 
             return best_score
 
