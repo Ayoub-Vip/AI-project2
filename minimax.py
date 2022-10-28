@@ -18,12 +18,11 @@ class PacmanAgent(Agent):
         Returns:
             A hashable key tuple.
         """
-        tup = tuple([state.getPacmanPosition(), 
-            state.getFood(), tuple(state.getCapsules())])
 
-        for i in range(state.getNumAgents() - 1):
-            tup = tup + (state.getGhostPosition(i + 1), state.getScore())
-        return tup
+        return (
+        state.getPacmanPosition(),
+        state.getFood()
+    ) + tuple(state.getGhostStates())
 
     def __init__(self):
         """

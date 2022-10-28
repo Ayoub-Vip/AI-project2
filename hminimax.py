@@ -12,7 +12,6 @@ def heuristic_function(state):
         + Score
         + manhattan distance to ghost
         - manhattan distance to nearest food
-
     """
     # findind closest food dist
     foodlist = state.getFood().asList()
@@ -29,15 +28,17 @@ def heuristic_function(state):
             closestFood = minLoc
             closestFoodPos = foodlist[i]
     score = 0
+
     for food in foodlist:
         dist = util.manhattanDistance(closestFoodPos, food)
         if dist!=0:
             score += 1.0/util.manhattanDistance(closestFoodPos, food)
 
-    # findind closest ghost dist
+    # ghost dist
     closestGhost = util.manhattanDistance(position, state.getGhostPosition(1))
 
     return state.getScore() - closestFood - score + closestGhost/2
+
 
 
 class PacmanAgent(Agent):
@@ -69,6 +70,7 @@ class PacmanAgent(Agent):
         for i in range(state.getNumAgents() - 1):
             tup = tup + (state.getGhostPosition(i + 1), )
 
+
         return tup
 
     def __init__(self):
@@ -86,7 +88,10 @@ class PacmanAgent(Agent):
         -------
         - A legal move as defined in `game.Directions`.
         """
-        self.max_depth = 3 if util.manhattanDistance(state.getPacmanPosition(), state.getGhostPosition(1)) > 1 else 4
+# <<<<<<< HEAD
+#         self.max_depth = 3 if util.manhattanDistance(state.getPacmanPosition(), state.getGhostPosition(1)) > 1 else 4
+# =======
+# >>>>>>> elie_v
         curKey = self.__key(state)
         self.alltime_closed[curKey] = self.minimax(state)
         return self.alltime_closed[curKey]
@@ -141,5 +146,4 @@ class PacmanAgent(Agent):
             closed[curKey] = best_score
             return best_score
 
-        
         return max_value(state, 0)
